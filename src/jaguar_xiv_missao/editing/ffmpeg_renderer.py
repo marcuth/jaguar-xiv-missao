@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import os
 import re
+import shutil
 import subprocess
 import tempfile
 from dataclasses import dataclass
@@ -80,6 +81,7 @@ class FfmpegRenderer:
         preset: str,
         crf: int,
         threads: int,
+        encoder: str = "libx264",
     ) -> None:
         self._overlays = overlays
         self._outro_path = outro_path
@@ -88,6 +90,7 @@ class FfmpegRenderer:
         self._preset = preset
         self._crf = crf
         self._threads = threads
+        self._encoder = encoder
 
     def render(
         self, source: Path, keep: list[tuple[float, float]], out: Path,
@@ -132,10 +135,18 @@ class FfmpegRenderer:
     def _run(self, inputs: list[str], script: str, out: Path) -> subprocess.CompletedProcess[str]:
         # ffmpeg >= 7 trocou `-filter_complex_script <arq>` por `-/filter_complex <arq>`
         for option in SCRIPT_OPTIONS:
+            executable = shutil.which("ffmpeg") if self._encoder.endswith("_nvenc") else None
+            executable = executable or ffmpeg_exe()
+            quality_args = (
+                ["-crf", str(self._crf)] if self._encoder == "libx264"
+                else ["-cq", str(self._crf), "-b:v", "0"]
+            )
             cmd = [
-                ffmpeg_exe(), "-nostdin", "-hide_banner", "-loglevel", "error", "-y", *inputs,
+                executable, "-nostdin", "-hide_banner", "-loglevel", "error", "-y", *inputs,
                 option, script, "-map", "[outv]", "-map", "[outa]",
-                "-c:v", "libx264", "-preset", self._preset, "-crf", str(self._crf),
+                "-c:v", self._encoder,
+                "-preset", (self._preset if self._encoder == "libx264" else "p4"),
+                *quality_args,
                 "-pix_fmt", "yuv420p", "-threads", str(self._threads),
                 "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart", str(out),
             ]

@@ -15,4 +15,4 @@ def create_renderer(settings: Settings) -> Renderer:
     )
     if settings.render_engine == "moviepy":
         return ClipRenderer(*args)
-    return FfmpegRenderer(*args)
+    return FfmpegRenderer(*args, settings.render_video_encoder)

@@ -103,6 +103,8 @@ class Settings(BaseSettings):
     render_preset: str = "medium"
     render_crf: int = 21
     render_threads: int = 4
+    render_video_encoder: str = "h264_nvenc"
+    """Encoder do vídeo: h264_nvenc para GPU NVIDIA ou libx264 para CPU."""
     max_source_height: int = 1080
 
     # ---------- IA (AI SDK para Python, pacote `ai`) ----------

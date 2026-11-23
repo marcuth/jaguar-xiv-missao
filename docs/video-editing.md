@@ -88,7 +88,8 @@ Pontos importantes:
 - **ffmpeg embutido:** `ffmpeg_exe()` usa o binário do `imageio-ffmpeg`; se indisponível, o `ffmpeg` do PATH.
 - **Sem `ffprobe`:** `probe()` lê tamanho, duração e presença de áudio da saída de `ffmpeg -i`.
 - **Requisito:** o vídeo-fonte precisa ter áudio; sem áudio o render falha de propósito.
-- **Saída:** `libx264`, `yuv420p`, `aac 192k`, `+faststart`, ajustável por `RENDER_FPS`, `RENDER_PRESET` (padrão `medium`), `RENDER_CRF` (21) e `RENDER_THREADS` (4).
+- **Saída:** `h264_nvenc` (GPU NVIDIA, padrão) ou `libx264` (CPU), `yuv420p`, `aac 192k`, `+faststart`. NVENC usa preset `p4` e qualidade constante `RENDER_CRF` via `-cq`; x264 mantém `RENDER_PRESET`, `RENDER_CRF` e `RENDER_THREADS`.
+- NVENC requer um FFmpeg no PATH compilado com suporte a `h264_nvenc` e driver NVIDIA compatível. Se indisponível, o render falha com o erro do FFmpeg; configure `RENDER_VIDEO_ENCODER=libx264` para usar CPU.
 
 Desempenho observado: ~12 s com ffmpeg contra ~228 s com moviepy para o mesmo corte, com saída equivalente.
 

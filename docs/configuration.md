@@ -70,6 +70,7 @@ Valores vazios em caminhos (`WATERMARK_PATH=`) significam "desligado".
 | `RENDER_PRESET` | medium | Preset do x264 (mais lento = arquivo menor) |
 | `RENDER_CRF` | 21 | Qualidade (menor = melhor e maior) |
 | `RENDER_THREADS` | 4 | Threads do x264 |
+| `RENDER_VIDEO_ENCODER` | h264_nvenc | `h264_nvenc` (GPU NVIDIA) ou `libx264` (CPU) |
 | `MAX_SOURCE_HEIGHT` | 1080 | Altura máxima do download |
 
 ## IA
