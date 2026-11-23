@@ -26,6 +26,7 @@ UPLOAD_RESUME_ATTEMPTS = 6  # retomadas externas seguidas sem progresso
 
 
 def load_credentials(client_secrets: Path, token_file: Path):
+    from google.auth.exceptions import RefreshError
     from google.auth.transport.requests import Request
     from google.oauth2.credentials import Credentials
     from google_auth_oauthlib.flow import InstalledAppFlow
@@ -34,10 +35,14 @@ def load_credentials(client_secrets: Path, token_file: Path):
     if token_file.exists():
         creds = Credentials.from_authorized_user_file(str(token_file), SCOPES)
     if creds and creds.expired and creds.refresh_token:
-        creds.refresh(Request())
-    elif not creds or not creds.valid:
+        try:
+            creds.refresh(Request())
+        except RefreshError:
+            logger.warning("Refresh token do YouTube expirado ou revogado; iniciando novo OAuth")
+            creds = None
+    if not creds or not creds.valid:
         flow = InstalledAppFlow.from_client_secrets_file(str(client_secrets), SCOPES)
-        creds = flow.run_local_server(port=0)
+        creds = flow.run_local_server(port=0, prompt="consent")
     token_file.parent.mkdir(parents=True, exist_ok=True)
     token_file.write_text(creds.to_json(), encoding="utf-8")
     return creds
