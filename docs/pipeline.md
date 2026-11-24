@@ -70,6 +70,8 @@ Detalhes em [clip-selection.md](clip-selection.md).
 | `done` | Todos os cortes processados | verdadeiro | Não |
 | `failed` | Exceção durante o processamento | falso | Sim, na próxima rodada |
 
+Lives agendadas que o `yt-dlp` ainda não consegue abrir são reconhecidas como `is_upcoming` e ficam em espera; não são registradas como falha.
+
 `mark_waiting` não altera `updated_at` se o vídeo já estava esperando, então o relógio da espera não é reiniciado a cada rodada.
 
 ## Limites que interrompem sem marcar o vídeo

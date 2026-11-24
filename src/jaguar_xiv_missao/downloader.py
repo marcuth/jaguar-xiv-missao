@@ -25,8 +25,16 @@ class VideoDownloader:
 
     def enrich(self, video: SourceVideo) -> SourceVideo:
         """Completa duração, descrição e estado de live (o RSS não traz duração)."""
-        with self._ydl({"skip_download": True}) as ydl:
-            info = ydl.extract_info(video.url, download=False)
+        from yt_dlp.utils import DownloadError
+
+        try:
+            with self._ydl({"skip_download": True}) as ydl:
+                info = ydl.extract_info(video.url, download=False)
+        except DownloadError as exc:
+            if "This live event will begin in" not in str(exc):
+                raise
+            logger.info("Live futura %s; aguardando o início", video.id)
+            return replace(video, live_status="is_upcoming")
         stamp = info.get("release_timestamp") or info.get("timestamp")
         return replace(
             video,

@@ -45,8 +45,16 @@ class AiSdkClient:
         com espera crescente (delay, 2x, 4x... até o teto)."""
         attempt = 0
         while True:
+            generation = self._loop.create_task(self._generate(system, user, output_type))
             try:
-                return self._loop.run_until_complete(self._generate(system, user, output_type))
+                return self._loop.run_until_complete(generation)
+            except KeyboardInterrupt:
+                if not generation.done():
+                    generation.cancel()
+                self._loop.run_until_complete(
+                    asyncio.gather(generation, return_exceptions=True)
+                )
+                raise
             except Exception as exc:
                 if attempt >= self._max_retries:
                     raise
@@ -75,6 +83,11 @@ class AiSdkClient:
         if self._loop.is_closed():
             return
         try:
+            pending = asyncio.all_tasks(self._loop)
+            for task in pending:
+                task.cancel()
+            if pending:
+                self._loop.run_until_complete(asyncio.gather(*pending, return_exceptions=True))
             self._loop.run_until_complete(self._model.provider.aclose())
             self._loop.run_until_complete(self._loop.shutdown_asyncgens())
         finally:
